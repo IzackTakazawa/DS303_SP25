@@ -42,7 +42,13 @@ Think back to our class discussion and your previous studies in math. Tell me be
 
 #### Answer:
 
-(write your answer here)
+y is the dependent variable
+
+b0 is the y-intercept
+
+b1 is the slope of the equation
+
+x is the independent variable
 
 ## Let's try it
 
@@ -55,6 +61,7 @@ Let's start by loading the `MASS` and `ISLR2` packages, which are very large col
 library(MASS)
 library(ISLR2)
 library(lme4)
+
 ```
 
 ## Boston Housing Data
@@ -67,7 +74,8 @@ You can just call upon the data (it's already in the package). I'll get you star
 
 ```{r}
 head(Boston)
-
+summary(Boston)
+str(Boston)
 ```
 
 We learned in class that we can apply a simple linear regression using `lm`. Here is the basic format:
@@ -81,27 +89,30 @@ model <- lm(y ~ x, data=df)
 Use the above basic format to create a linear regression model to predict the **median home value** (medv) based on the **percentage of lower status population** (lstat), using the data from the 'Boston' dataset. Assign it to the variable `lm.model`.
 
 ```{r}
-
+lm.model_Boston <- lm(medv ~ lstat, data= Boston)
+summary(lm.model_Boston)
 ```
 
 If you set it up right, you should be able to run your model name in the below code chunk and view the basic model output. Give it a try:
 
 ```{r}
-
+lm.model_Boston
 ```
 
 ### Question 5
 
 What is your model output telling you?
 
-#### Answer
+**Answer:**
 
-(write your answer here)
+The model gives us the equation; medv = -0.95 \* lstat + 34.55
+
+There is a negative linear relationship between lstat and medv. Neighborhoods with a higher percentage of lower-status households tend to have lower median home values.
 
 You can also try `summary(lm.model)`.
 
 ```{r}
-summary(lm.model)
+summary(lm.model_Boston)
 ```
 
 ### Question 6
@@ -110,18 +121,18 @@ What additional information do you get from this summary of the model output?
 
 #### Answer
 
-(write your answer here)
+When looking at the summary the one statistic that sticks out to me is the p-value on the bottom right. This shows if there is any significant difference between the two variables we are looking at.
 
 ## confint() and predict()
 
 In order to obtain a confidence interval for the coefficient estimates, we can use the `confint()` command. The `predict()` function can be used to produce confidence intervals and prediction intervals for the prediction of `medv` for a given value of `lstat`. Run these and see if you can figure out what it is telling you.
 
 ```{r}
-confint(lm.model)
+confint(lm.model_Boston)
 
-predict(lm.model, data.frame(lstat = (c(5, 10, 15))), interval = "confidence")
+predict(lm.model_Boston, data.frame(lstat = (c(5, 10, 15))), interval = "confidence")
 
-predict(lm.model, data.frame(lstat = (c(5, 10, 15))), interval = "prediction")
+predict(lm.model_Boston, data.frame(lstat = (c(5, 10, 15))), interval = "prediction")
 ```
 
 ### Question 7
@@ -130,7 +141,7 @@ What do you think the above `confint()` and `predict()` information means? It's 
 
 #### Answer
 
-(write your answer here)
+I have no idea but if I were to guess I would think the confidence would be the accuracy and the predict to be some sort of prediction of future values???
 
 ## Visualizing
 
@@ -138,7 +149,7 @@ Here is a simple base R way to plot this data:
 
 ```{r}
 plot(Boston$lstat, Boston$medv)
-abline(lm.model)
+abline(lm.model_Boston)
 ```
 
 ### Question 8
@@ -146,14 +157,18 @@ abline(lm.model)
 Can you convert the above code chunk to `ggplot`? Try below. Have fun with editing the appearance of your plot if you'd like :)
 
 ```{r}
+library(plotly)
 
+ggplot(Boston, aes(x = lstat, y = medv)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE)
 ```
 
 In a future class, we'll explore some diagnostic plots and what that means for evaluating models. For now, just run the below and have a look:
 
 ```{r}
 par(mfrow = c(2, 2))
-plot(lm.model)
+plot(lm.model_Boston)
 ```
 
 ## Run another model
@@ -172,7 +187,11 @@ What variables are you interested in exploring using a linear regression? Just p
 
 #### Answer
 
-(write your answer here)
+x = lstat
+
+y = rm
+
+How does the percentage of low income population affect the average number of rooms in a household?
 
 ### Question 10
 
@@ -182,9 +201,17 @@ Build and run your model, examine the model output:
 
 ```{r}
 
+lm.model_Boston_rm <- lm(rm ~ lstat, data = Boston)
+
+summary(lm.model_Boston_rm)
 
 
+```
 
+```{r}
+
+plot(Boston$lstat, Boston$rm)
+abline(lm.model_Boston_rm)
 ```
 
 #### Part 2
@@ -193,7 +220,7 @@ Explain what you found in plain English. Do your best.
 
 #### Answer
 
-(write your answer here)
+The model indicates that neighborhoods with a higher percentage of lower-status residents tend to have homes with fewer rooms.
 
 ## The end!
 
