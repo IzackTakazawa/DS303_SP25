@@ -81,7 +81,7 @@ str(Boston)
 We learned in class that we can apply a simple linear regression using `lm`. Here is the basic format:
 
 ```{r}
-model <- lm(y ~ x, data=df)
+#model <- lm(y ~ x, data=df)
 ```
 
 ### Question 4
@@ -225,3 +225,11 @@ The model indicates that neighborhoods with a higher percentage of lower-status 
 ## The end!
 
 That's it for now. Please feel free to raise questions in class or via email!
+
+```{r}
+lm.mult <- lm(medv ~ lstat + age, data = Boston)
+```
+
+```{r}
+
+```
