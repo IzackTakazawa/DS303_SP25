@@ -231,5 +231,12 @@ lm.mult <- lm(medv ~ lstat + age, data = Boston)
 ```
 
 ```{r}
-
+lm.model_class <- lm(crim ~ age * lstat, data = Boston)
 ```
+
+```{r}
+plot(Boston$crim, Boston$age * Boston$lstat)
+abline(lm.model_class)
+```
+
+This model is trying to predict crime in Boston based on the age and status of the residents living in the neighborhood.
