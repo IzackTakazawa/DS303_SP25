@@ -173,7 +173,7 @@ There doesn't seem to be a whole lot of difference between where the stores plac
 Below, fit a linear regression model to predict `Sales` that includes ALL variables as well as a few interaction terms of your choice.
 
 ```{r}
-lm.carseats <- lm(Sales ~ . + ShelveLoc + Price + Advertising, data = carseats)
+lm.carseats <- lm(Sales ~ . + ShelveLoc:Price + ShelveLoc:Advertising, data = carseats)
 summary(lm.carseats)
 
 ```
