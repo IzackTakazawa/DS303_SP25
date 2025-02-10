@@ -1,0 +1,205 @@
+---
+title: "Qualitative Predictors"
+author: 
+  - "Student Name"
+  - "DS303, SP25"
+  - "Prof. Amber Camp"
+date: 2/7/25
+format: html
+editor: visual
+theme: spacelab
+---
+
+## Qualitative Predictors
+
+So far, we have used the `Boston` data to explore variables that are all numerical/quantitative. In this document, we will examine data that is qualitative in nature.
+
+## Let's try it
+
+Start by loading the `MASS` and `ISLR2` packages, and also `lme4` and `tidyverse`. The `MASS` package is loaded just so we can briefly look at `Boston`, but we will actually be using `Carseats` data from `ISLR2`.
+
+```{r, echo = FALSE, message = FALSE}
+library(MASS)
+library(ISLR2)
+library(lme4)
+library(tidyverse)
+```
+
+## Boston Housing Data
+
+Take a moment to use the `skimr` package to examine the `Boston` data. You are probably quite familiar with this data at this point.
+
+`skimr` will create a new table for you that summarizes the `Boston` data, including details like number of `NA`s, the mean and sd, etc. Look at the different variables listed in the second column, and the associated type listed in the first column. See how every variable is numeric?
+
+```{r}
+# install.packages("skimr") # install if needed
+skim_boston <- skimr::skim(Boston)
+View(skim_boston)
+```
+
+## Carseats data
+
+Use `skimr` to inspect the Carseats data. You should see a few variables of type *factor*. Notice how the mean calculation doesn't apply, and there are new columns for factor information in your `skimr` table.
+
+```{r}
+carseats <- Carseats # assign, for easy access later
+skim_carseats <- skimr::skim(carseats)
+View(skim_carseats)
+```
+
+### Examine the categorical data
+
+Examine the factor variables. These are qualitative in nature and are evaluated as ***categorical data***.
+
+Qualitative predictors such as `ShelveLoc` consist of different ***levels*** within that category. ***Levels*** refer to the distinct categories or values that a categorical variable can take. For example, levels of the made-up variable `Fruit` could include apple, banana, and cherry. In the case of `ShelveLoc`, the levels are bad, medium, and good. I'm glad you're reading this and not just looking at the code! Tell me your favorite fruit for an extra point.
+
+By the way, `ShelveLoc` refers to the shelving location for carseats—that is, the place on a store shelf in which the car seat is displayed.
+
+```{r}
+summary(carseats$ShelveLoc) # three levels (bad, good, medium)
+
+summary(carseats$Urban) # two levels (no, yes)
+
+summary(carseats$US) # two levels (no, yes)\
+
+head(carseats)
+```
+
+### Dummy coding
+
+Given a qualitative variable such as `ShelveLoc`, `R` generates dummy variables automatically. This is referred to as *dummy coding*. We'll spend more time in a future class discussing coding (including dummy coding). Consider this a soft launch.
+
+We can use `contrasts()` to see how the dummy coding is applied.
+
+```{r}
+contrasts(carseats$ShelveLoc)
+```
+
+Here is how to interpret that matrix.
+
+-   `R` has created a `ShelveLocGood` dummy variable that takes on a value of 1 if the shelving location is **good**, and 0 otherwise.
+
+-   It has also created a `ShelveLocMedium` dummy variable that equals 1 if the shelving location is **medium**, and 0 otherwise.
+
+-   A **bad** shelving location corresponds to a zero for each of the two dummy variables.
+
+### Run a linear regression model.
+
+Let's run a model to see it in action. We will attempt to predict `Sales` based on `ShelveLoc`.
+
+```{r}
+lm.shelf <- lm(Sales ~ ShelveLoc, data = carseats)
+summary(lm.shelf)
+```
+
+### Interpretation of `lm.shelf`
+
+Note that the output does not just say `ShelveLoc` - - you have `ShelveLocGood` and `ShelveLocMedium`. Where is `ShelveLocBad`? It is not listed because it serves as the **reference category** in the model.
+
+This means that the coefficients for `ShelveLocGood` and `ShelveLocMedium` show how much sales increase **compared to** `ShelveLocBad`. We don’t need a separate coefficient for `ShelveLocBad` because it is the baseline that the other categories are compared against. We see:
+
+-   The coefficient for `ShelveLocGood` is positive, indicating that a Good shelving location is associated with high sales (relative to a Bad location)
+
+-   `ShelveLocMedium` has a smaller positive coefficient, indicating that a Medium shelving location is associated with higher sales than a bad shelving location, but lower sales than a good shelving location
+
+### Visualization
+
+Scatterplots are not really useful here with the categorical data (try it, you'll see what I mean). Use a boxplot or violin plot instead.
+
+Evaluate the below plots. Do they align with the model interpretation above?
+
+```{r}
+ggplot(carseats, aes(x = ShelveLoc, y = Sales)) +
+  geom_boxplot() +
+  stat_summary(fun = mean, geom = "point", color = "red", size = 2) # red dot shows the mean
+
+ggplot(carseats, aes(x = ShelveLoc, y = Sales)) +
+  geom_violin()
+```
+
+To inspect your model, you can also create a residuals vs. fitted values plot to check for homoscedasticity (constant variance of residuals) and a Q-Q plot to check if the residuals are normally distributed.
+
+```{r}
+# create a new df with residual and predicted values
+predicted <- predict(lm.shelf)
+residuals <- resid(lm.shelf)
+residuals_data <- data.frame(fitted = predicted, residuals = residuals)
+
+# residuals v. fitted values plot
+ggplot(residuals_data, aes(x = fitted, y = residuals)) +
+  geom_point() +
+  geom_hline(yintercept = 0, color = "red", linetype = "dashed") +
+  labs(title = "Residuals vs. Fitted Values",
+       x = "Fitted Values",
+       y = "Residuals")
+
+# Q-Q plot
+ggplot(data.frame(residuals = residuals), aes(sample = residuals)) +
+  geom_qq() +
+  geom_qq_line() +
+  labs(title = "Normal Q-Q Plot of Residuals") +
+  theme_minimal()
+```
+
+## Your turn
+
+### Predicting Price based on Shelf Location
+
+Below, fit a linear regression model to predict `Price` based on `ShelveLoc`. I'll leave it to you to recall the syntax and build your model.
+
+```{r}
+lm.price <- lm(Price ~ ShelveLoc, data = carseats)
+summary(lm.price)
+
+```
+
+Create a boxplot or violin plot to aid in your interpretation, and write in your interpretation below.
+
+```{r}
+ggplot(carseats, aes(x = ShelveLoc, y = Price)) +
+  geom_boxplot() +
+  stat_summary(fun = mean, geom = "point", color = "red", size = 2) # red dot shows the mean
+
+ggplot(carseats, aes(x = ShelveLoc, y = Price)) +
+  geom_violin()
+```
+
+#### Interpretation of `lm.price`
+
+There doesn't seem to be a whole lot of difference between where the stores place their items based on the shelf location when based on the price, compared to the sales and graphs above. If there was a difference it would show where the items that are more expensive or cheaper are located on the shelves in the stores.
+
+### Predict Sales using all variables
+
+Below, fit a linear regression model to predict `Sales` that includes ALL variables as well as a few interaction terms of your choice.
+
+```{r}
+lm.carseats <- lm(Sales ~ . + ShelveLoc + Price + Advertising, data = carseats)
+summary(lm.carseats)
+
+```
+
+#### Interpretation of `lm.carseats`
+
+Provide a summary of the model output, including key coefficients and their significance levels. Discuss which variables are statistically significant predictors of `Sales`.
+
+-   Price (-0.0954, p \< 2e-16) → Higher prices significantly reduce Sales.
+
+<!-- -->
+
+-   ShelveLocGood (4.85, p \< 2e-16) → A “Good” shelf placement strongly boosts Sales compared to “Bad.”
+
+-   ShelveLocMedium (1.96, p \< 2e-16) → A “Medium” shelf placement increases Sales but less than “Good.”
+
+-   Advertising (0.1231, p \< 2e-16) → Increased advertising spending is associated with higher Sales.
+
+-   CompPrice (0.0928, p \< 2e-16) → Higher competitor prices slightly increase Sales.
+
+-   Income (0.0158, p \< 2e-16) → Higher-income customers tend to generate more Sales.
+
+-   Age (-0.046, p \< 2e-16) → Older customers are associated with lower Sales.
+
+#### Practical implications
+
+Discuss the practical implications of your findings. How can this model inform business decisions regarding pricing, advertising, or product placement, etc?
+
+This model could provide valuable insights that could help the businesses optimize its pricing, advertising, and product placement. Since higher prices reduce the sales, they could work to tweak some of the overall prices lowering them to a good balance where they could not only make a profit but increase their sales on the car seats. Additionally, from the model we see that shelf placement is critical in their sales, thus maximizing the amount of high selling or marketable products in certain positions may help to increase their sales. We also see a significant increase when looking at the advertisement. Businesses that may want to increase their sales should look to advertise and spend more money on increasing their popularity and advertisement.
