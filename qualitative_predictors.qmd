@@ -51,7 +51,7 @@ View(skim_carseats)
 
 Examine the factor variables. These are qualitative in nature and are evaluated as ***categorical data***.
 
-Qualitative predictors such as `ShelveLoc` consist of different ***levels*** within that category. ***Levels*** refer to the distinct categories or values that a categorical variable can take. For example, levels of the made-up variable `Fruit` could include apple, banana, and cherry. In the case of `ShelveLoc`, the levels are bad, medium, and good. I'm glad you're reading this and not just looking at the code! Tell me your favorite fruit for an extra point.
+Qualitative predictors such as `ShelveLoc` consist of different ***levels*** within that category. ***Levels*** refer to the distinct categories or values that a categorical variable can take. For example, levels of the made-up variable `Fruit` could include apple, banana, and cherry. In the case of `ShelveLoc`, the levels are bad, medium, and good. I'm glad you're reading this and not just looking at the code! Tell me your favorite fruit for an extra point. - grapessss
 
 By the way, `ShelveLoc` refers to the shelving location for carseats—that is, the place on a store shelf in which the car seat is displayed.
 
