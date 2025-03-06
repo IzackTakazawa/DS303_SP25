@@ -5,7 +5,7 @@ author:
   - "DS303, SP25"
   - "Prof. Amber Camp"
 date: 2/28/25
-format: html
+format: pdf
 toc: true
 editor: visual
 theme: spacelab
