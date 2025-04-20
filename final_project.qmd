@@ -1,0 +1,38 @@
+---
+title: "final_project"
+author: 
+  - "Izack Takazawa"
+  - "DS303, SP25"
+  - "Prof. Amber Camp"
+date: 3/24/25
+format: revealjs
+toc: true
+editor: visual
+theme: spacelab
+---
+
+## DS303 Final Project
+
+## ##Load packages
+
+```{r, echo = FALSE, message = FALSE}
+library(tidyverse) 
+library(lme4) 
+library(lmerTest)
+library(phonR)
+```
+
+## ##Load data
+
+Load your personal data (make sure you update from P106 -\> your P#)
+
+```{r}
+# read in data
+oles_pitching <- read_csv("data/revised_pitching.csv")
+
+# convert variables to factor where needed
+#convert_to_factor <- function(df, cols) {
+ # df[cols] <- lapply(df[cols], as.factor)
+  #return(df)
+#}
+```
