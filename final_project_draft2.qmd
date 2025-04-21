@@ -1,0 +1,178 @@
+---
+title: "DS303 Final Project"
+subtitle: "Analyzing Pitching Data"
+author: "Izack Takazawa & Alex Greb"
+institute: "DS 303, Spring 2025"
+date: 4/21/25
+format:
+  revealjs: 
+    theme: sky
+toc: False
+editor: visual
+---
+
+## Background Info
+
+::: incremental
+-   2024 St. Olaf Baseball Team Pitching Data
+
+-   Over the course of the 2024 season, I charted our pitchers during live at bats and games I was able to collect data on.
+
+-   Our dataset contains pitch-level outcomes that help us assess each pitcher's performance.
+:::
+
+## Research Question
+
+::: incremental
+-   How accurately can we predict a pitcher’s effectiveness measured by strike percentage and strikeouts based on detailed pitching data collected from the 2024 St. Olaf baseball season?
+
+-   Why does this matter?
+
+    -   Strike percentage and strikeouts are key indicators of pitching success.
+
+    -   Understanding what variables drive these metrics can help coaches evaluate pitcher performance and make data informed decisions duirng a season or preparing for a game.
+:::
+
+## Data Collection
+
+```{r, echo = FALSE, message = FALSE}
+library(tidyverse) 
+library(lme4) 
+library(lmerTest)
+library(phonR)
+library(dplyr)
+```
+
+```{r, echo = FALSE, message = FALSE}
+# read in data
+oles_pitching_columns_need_drop <- read_csv("data/revised_ole_modeling.csv")
+
+oles_pitching <- oles_pitching_columns_need_drop[, -c(8, 9, 10)]
+
+names(oles_pitching) <- make.names(names(oles_pitching))
+
+oles_pitching <- oles_pitching %>%
+  rename("Pitcher" = "...1")
+
+#head(oles_pitching)
+```
+
+::: incremental
+-   The dataset includes detailed information for each pitcher, such as the number of strikes, balls, fouls, and different pitch outcomes (e.g., called strikes, swinging strikes, competitive pitches)
+-   The data is broken down by pitch type: fastball (FB), slider (SL), curveball (CB), and changeup (CH)
+-   Some additional information and contextual variables include the number of batters faced (BF), first pitch strike percentage, 2-strike pitch counts, total strikeouts (K), and much more
+:::
+
+## Data Collection cont.
+
+-   These variables allow for both descriptive and predictive analysis of pitching performance, helping to evaluate how effective each pitcher is in different game scenarios.
+
+## Exploratory Data Analysis (EDA)
+
+-   Here we calculated strike percentages by pitch type for each pitcher
+
+```{r, echo = TRUE}
+oles_pitching$fb_strike_pct <- oles_pitching$'FB.Strikes' / oles_pitching$'FB.TOT'
+
+oles_pitching$cb_strike_pct <- oles_pitching$'CB.strikes' / oles_pitching$'CB.total'
+
+oles_pitching$sl_strike_pct <- oles_pitching$'SL.Strikes' / oles_pitching$'SL.TOT'
+
+oles_pitching$ch_strike_pct <- oles_pitching$'CH.Strikes' / oles_pitching$'CH.TOT'
+
+```
+
+## Visualization of Strike Percentages Based on Pitch Type
+
+```{r}
+oles_pitching_vis <- oles_pitching %>%
+  select(fb_strike_pct, sl_strike_pct, ch_strike_pct, cb_strike_pct) %>%
+  pivot_longer(cols = everything(), names_to = "PitchType", values_to = "StrikePct")
+
+ggplot(oles_pitching_vis, aes(x = StrikePct, fill = PitchType)) +
+  geom_density(alpha = 0.6) +
+  labs(title = "Distribution of Strike % by Pitch Type",
+       x = "Strike %",
+       y = "Density") +
+  theme_minimal()
+```
+
+## Modeling Strike Percentage
+
+We used linear regression to model strike percentage as a function of pitch outcomes
+
+FB Strike%
+
+```{r, echo = TRUE}
+summary(model_fb_strike <- lm(fb_strike_pct ~ FB.Strikes + FB.Fouls + FB.SS + FB.CS, data = oles_pitching))
+```
+
+## Modeling Strike Percentage
+SL Strike%
+
+```{r, echo = TRUE}
+summary(model_sl_strike <- lm(sl_strike_pct ~ SL.Strikes + SL.Fouls + SL.SS + SL.CS, data = oles_pitching))
+```
+
+## Modeling Strike Percentage
+CH Strike%
+
+```{r, echo = TRUE}
+summary(model_ch_strike <- lm(ch_strike_pct ~ CH.Strikes + CH.Fouls + CH.SS + CH.CS, data = oles_pitching))
+```
+
+## 
+Interpretation of Modeling Strike Percentage: 
+:::incremental 
+
+-   For each pitch type, total strikes were positively correlated with overall strike percentage.
+
+-   Called Strikes (CS) and Swinging Strikes (SS) had the strongest positive associations.
+
+:::
+
+## Modeling Strikeouts (K)
+
+::: incremental
+We used a Poisson regression model to predict total strikeouts (K) for each pitcher using variables, such as:
+
+-   Number of 2-strike counts
+
+-   First-pitch strikes
+
+-   Strike Percentage
+:::
+
+##
+This model aimed to determine which game situations are most predictive of a pitcher recording a strikeout.
+
+```{r, echo = TRUE}
+summary(model_k <- glm(K ~ X2K.Counts + X1st.Pitch.Strikes  + Strike. , data = oles_pitching, family = poisson))
+```
+
+
+## 
+
+
+```{r, echo = TRUE}
+model_km <- glm(K ~ X2K.Counts + X1st.Pitch.Strikes  * Strike. , data = oles_pitching, family = poisson)
+```
+
+```{r, echo = FALSE}
+summary(model_km)
+```
+
+```{r}
+anova(model_k,model_km)
+```
+
+
+## Explanation
+
+Model explanations: We ran 3 models, 1 for each pitch type, trying to predict strike percentage with the variables of total strikes, foul ball strikes, swinging strikes, and called strikes respectively for each pitch, based off of these models we found that none of these variables were significant predictors of strike percentage. The p-values we found for the models were all well above .05, and the R-squared values ranged from .22 to .51, meaning the models could only explain between 22 and 51% of the variance found.
+
+For these next models, we wanted to predict what factors led to more strikeouts, and we wanted to test the variables of 2 strike counts, first pitch strikes thrown, and overall strike percentage. The first model assumes each predictor variable is independent, and the second model adds an interaction between first pitch strike and the strike percentage. This interaction tests whether the impact of first pitch strikes changes depending on total strike percentage thrown, trying to see if throwing first pitch strikes will only lead to more strikeouts if you throw a higher percentage of strikes overall.
+
+Based on these models we found that the number of 2 strike counts is a significant predictor of .00512 in the first model, and we also found that strike percentage, and first pitch strikes thrown are not significant predictors of strikeouts, even when in model 2 we added the interaction between first pitch strike and strike percentage.
+
+The results of the ANOVA gave a p-value of .3288, meaning that there is no significant increase/benefit to using the second model compared to the first, and that it would not be justified to include the added interaction between first pitch strike and strike percentage.
