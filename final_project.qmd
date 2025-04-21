@@ -1,14 +1,15 @@
 ---
 title: "final_project"
 author: 
-  - "Izack Takazawa"
+  - "Izack Takazawa & Alex Greb"
   - "DS303, SP25"
   - "Prof. Amber Camp"
-date: 3/24/25
-format: revealjs
+date: 4/21/25
+format:
+  revealjs: 
+    theme: sky
 toc: true
 editor: visual
-theme: spacelab
 ---
 
 ## DS303 Final Project
@@ -20,6 +21,7 @@ library(tidyverse)
 library(lme4) 
 library(lmerTest)
 library(phonR)
+library(dplyr)
 ```
 
 ## ##Load data
@@ -28,11 +30,77 @@ Load your personal data (make sure you update from P106 -\> your P#)
 
 ```{r}
 # read in data
-oles_pitching <- read_csv("data/revised_pitching.csv")
+oles_pitching_columns_need_drop <- read_csv("data/revised_ole_modeling.csv")
 
-# convert variables to factor where needed
-#convert_to_factor <- function(df, cols) {
- # df[cols] <- lapply(df[cols], as.factor)
-  #return(df)
-#}
+oles_pitching <- oles_pitching_columns_need_drop[, -c(8, 9, 10)]
+
+names(oles_pitching) <- make.names(names(oles_pitching))
+
+oles_pitching <- oles_pitching %>%
+  rename("Pitcher" = "...1")
+
+names(oles_pitching)
+```
+
+```{r}
+oles_pitching$fb_strike_pct <- oles_pitching$'FB.Strikes' / oles_pitching$'FB.TOT'
+
+oles_pitching$cb_strike_pct <- oles_pitching$'CB.strikes' / oles_pitching$'CB.total'
+
+oles_pitching$sl_strike_pct <- oles_pitching$'SL.Strikes' / oles_pitching$'SL.TOT'
+
+oles_pitching$ch_strike_pct <- oles_pitching$'CH.Strikes' / oles_pitching$'CH.TOT'
+
+```
+
+```{r}
+model_fb_strike <- lm(fb_strike_pct ~ FB.Strikes + FB.Fouls + FB.SS + FB.CS, data = oles_pitching)
+
+model_sl_strike <- lm(sl_strike_pct ~ SL.Strikes + SL.Fouls + SL.SS + SL.CS, data = oles_pitching)
+
+model_ch_strike <- lm(ch_strike_pct ~ CH.Strikes + CH.Fouls + CH.SS + CH.CS, data = oles_pitching)
+
+
+summary(model_fb_strike)
+summary(model_sl_strike)
+summary(model_ch_strike)
+```
+
+```{r}
+model_k <- glm(K ~ X2K.Counts + X1st.Pitch.Strikes + Competitive.Pitch. + Strike. + X2.3.Strikes + BF + CS., data = oles_pitching, family = poisson)
+
+summary(model_k)
+
+```
+
+```{r}
+oles_pitching$predicted_k <- predict(model_k, type = "response")
+
+ggplot(oles_pitching, aes(x = predicted_k, y = K)) +
+  geom_point(alpha = 0.7) +
+  geom_abline(slope = 1, intercept = 0, color = "blue", linetype = "dashed") +
+  labs(title = "Predicted vs. Actual Strikeouts",
+       x = "Predicted K",
+       y = "Actual K") +
+  theme_minimal()
+
+```
+
+```{r}
+oles_pitching_vis <- oles_pitching %>%
+  select(fb_strike_pct, sl_strike_pct, ch_strike_pct, cb_strike_pct) %>%
+  pivot_longer(cols = everything(), names_to = "PitchType", values_to = "StrikePct")
+
+ggplot(oles_pitching_vis, aes(x = StrikePct, fill = PitchType)) +
+  geom_density(alpha = 0.6) +
+  labs(title = "Distribution of Strike % by Pitch Type",
+       x = "Strike %",
+       y = "Density") +
+  theme_minimal()
+
+```
+
+```{r}
+
+
 ```
